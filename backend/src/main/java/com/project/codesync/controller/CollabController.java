@@ -32,10 +32,16 @@ public class CollabController {
     @GetMapping("/api/room/{roomId}")
     public ResponseEntity<Map<String, String>> getRoomState(@PathVariable String roomId) {
         String state = (String) redisTemplate.opsForValue().get("room_state:" + roomId);
+        String notes = (String) redisTemplate.opsForValue().get("room_notes:" + roomId);
+        String problem = (String) redisTemplate.opsForValue().get("room_problem:" + roomId);
+        String language = (String) redisTemplate.opsForValue().get("room_language:" + roomId);
         
         Map<String, String> response = new HashMap<>();
         // If the room doesn't exist yet, provide a default template
-        response.put("content", state != null ? state : "print(\"Hello CodeSync Room: " + roomId + "!\")");
+        response.put("content", state != null ? state : "print(\"Hello CodeSync!\")");
+        response.put("notes", notes != null ? notes : "Welcome to the interview workspace.\nStart taking notes here...");
+        response.put("problem", problem != null ? problem : "## Sample Interview Problem\n\nWrite a function that reverses a string.\n\n**Example:**\n`reverse('hello') == 'olleh'`");
+        response.put("language", language != null ? language : "python");
         
         return ResponseEntity.ok(response);
     }
@@ -54,15 +60,29 @@ public class CollabController {
                     "SYSTEM",
                     "EXECUTION_RESULT",
                     null,
+                    null,
+                    null,
+                    null,
                     null
             );
             // Broadcast the result to everyone in the room via Redis
             redisPublisher.publish(resultMessage);
-        } else {
-            // Normal code typing event, just broadcast it to other servers
-            redisPublisher.publish(message);
-            // Persist the latest code state in Redis for any new users joining
+        } else if ("CODE_SAVE".equals(message.getType())) {
+            // Persist the debounced code state in Redis for late-joiners
             redisTemplate.opsForValue().set("room_state:" + message.getRoomId(), message.getContent());
+        } else if ("NOTES_SAVE".equals(message.getType())) {
+            // Persist the debounced notes state in Redis for late-joiners
+            redisTemplate.opsForValue().set("room_notes:" + message.getRoomId(), message.getContent());
+        } else if ("PROBLEM_SAVE".equals(message.getType())) {
+            // Persist the debounced problem state in Redis for late-joiners
+            redisTemplate.opsForValue().set("room_problem:" + message.getRoomId(), message.getContent());
+        } else if ("LANGUAGE_UPDATE".equals(message.getType())) {
+            // Persist the language in Redis immediately and broadcast
+            redisTemplate.opsForValue().set("room_language:" + message.getRoomId(), message.getLanguage());
+            redisPublisher.publish(message);
+        } else {
+            // CODE_UPDATE, NOTES_UPDATE, PROBLEM_UPDATE, CURSOR_UPDATE: Broadcast instantly
+            redisPublisher.publish(message);
         }
     }
 }

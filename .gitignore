@@ -1,0 +1,27 @@
+# Java/Maven Build Artifacts
+backend/target/
+*.class
+*.jar
+*.war
+
+# Python Virtual Environments
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+execution-service/venv/
+
+# Node/NPM
+node_modules/
+dist/
+build/
+.npm/
+frontend/node_modules/
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
