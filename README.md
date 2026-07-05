@@ -1,67 +1,81 @@
-# CodeSync
+# CodeSync - Collaborative Coding Interview Workspace
 
-CodeSync is a browser-based collaborative coding interview workspace that enables interviewers and candidates to solve programming problems together using real-time synchronization, role-based collaboration, and dedicated remote code execution.
+A full-stack React + Spring Boot + Python gRPC application designed to simulate a distraction-free technical interview environment with real-time code synchronization, remote cursor tracking, and dedicated code execution.
 
-## Why CodeSync?
+## Current Features
 
-Existing collaborative editors are designed for software development, whereas coding interviews require interviewer/candidate roles, shared problem statements, integrated code execution, and distraction-free collaboration. CodeSync combines these workflows into a single browser-based workspace.
+**Workspace & Collaboration**
+- Real-time syncing of code, language selection, problem descriptions, and notes via STOMP WebSockets.
+- Remote cursor tracking (Interviewers can see exactly where the candidate is typing).
+- Redis state caching to instantly recover room state for late-joiners or after a page refresh.
 
-## Features
+**Role-Based Access Control**
+- **Interviewer Mode:** Read-only code editor, full edit access to problem statement/notes, hidden cursor.
+- **Candidate Mode:** Full edit access to code editor, read-only problem statement, active cursor broadcasting.
 
-### Role-Based Collaboration
-- **Interviewer Mode:** Read-only access to the code editor, full edit access to the problem statement and private notes, and hidden cursor.
-- **Candidate Mode:** Full edit access to the code editor, read-only access to the problem statement, and active cursor broadcasting.
+**Dedicated Execution Service (Python gRPC)**
+- Isolated microservice for executing candidate code.
+- Currently supports **Python 3** and **C++ (g++)**.
+- Captures `stdin` and streams `stdout`/`stderr` back to the workspace.
+- Enforces strict execution timeouts to prevent infinite loops.
 
-### Real-Time Synchronization
-- **State Sync:** Real-time syncing of code, language selection, problem descriptions, and interview notes using WebSockets and STOMP.
-- **Remote Cursors:** Interviewers can track exactly where the candidate is typing in real-time.
-- **State Persistence:** Redis caches the latest room state while Redis Pub/Sub propagates updates across backend instances, enabling late joiners and horizontal scaling.
+**Frontend (React + TypeScript + Vite)**
+- Split-pane layout using `react-resizable-panels`.
+- Integrated Monaco Editor for a VS Code-like coding experience.
 
-### Dedicated Code Execution
-- **Multi-Language Support:** Currently supports Python 3 and C++ (g++).
-- **Remote Execution:** Code is executed via a decoupled Python gRPC execution service, which processes the code, handles stdin, and streams the output back to the workspace.
+## Tech Stack
 
-## Future Improvements
-- Session replay using event sourcing
-- Shared interview timer
-- Dockerized execution sandbox for secure multitenancy
+| Layer | Tech |
+|---|---|
+| **Backend** | Spring Boot, WebSockets (STOMP), gRPC |
+| **Cache/PubSub** | Redis |
+| **Execution Engine** | Python, gRPC, Subprocess |
+| **Frontend** | React, Vite, TypeScript, Tailwind CSS, Monaco Editor |
 
-## Architecture
+## Prerequisites
 
-```mermaid
-graph TD
-    classDef frontend fill:#1e40af,stroke:#1e3a8a,stroke-width:2px,color:#fff;
-    classDef backend fill:#047857,stroke:#064e3b,stroke-width:2px,color:#fff;
-    classDef cache fill:#b91c1c,stroke:#7f1d1d,stroke-width:2px,color:#fff;
-    classDef rpc fill:#6d28d9,stroke:#4c1d95,stroke-width:2px,color:#fff;
+- Java 17+
+- Node.js 18+
+- Python 3.10+
+- Docker + Docker Compose (for Redis)
 
-    Client[React Client]:::frontend <-->|WebSockets / STOMP| Backend(Spring Boot Backend):::backend
-    Backend <-->|Pub/Sub & State Caching| Redis[(Redis)]:::cache
-    Backend <-->|gRPC| Exec[Python Execution Service]:::rpc
+## Setup Instructions
+
+### 1. Infrastructure (Redis & Database)
+Run Redis (and PostgreSQL) via Docker in the background:
+```bash
+docker-compose up -d
 ```
 
-## How to Run Locally
-
-### 1. Start the Redis Server
-Ensure you have a local Redis server running on port `6379`.
-
-### 2. Start the Python Execution Service
+### 2. Execution Service (Python)
+Navigate to the execution service and start the gRPC server:
 ```bash
 cd execution-service
+# (Optional) Create a virtual environment
 pip install grpcio grpcio-tools
-python execution_server.py
+python server.py
 ```
+*(Runs on port 50051)*
 
-### 3. Start the Java Backend
+### 3. Backend Setup (Spring Boot)
+Build and run the Java backend:
 ```bash
 cd backend
-mvn clean package -DskipTests
-java -jar target/codesync-0.0.1-SNAPSHOT.jar
+./mvnw clean package -DskipTests
+java -Duser.timezone=UTC -jar target/codesync-0.0.1-SNAPSHOT.jar
 ```
+*(Runs on port 8080)*
 
-### 4. Start the React Frontend
+### 4. Frontend Setup (React)
+Start the Vite development server:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+*(Runs on port 5173)*
+
+## Future Improvements
+- Session replay using event sourcing
+- Shared interview timer
+- Dockerized execution sandbox for secure multitenancy
