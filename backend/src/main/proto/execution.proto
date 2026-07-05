@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package execution;
+
+option java_multiple_files = true;
+option java_package = "com.project.codesync.grpc";
+option java_outer_classname = "ExecutionProto";
+
+service CodeExecutionService {
+  rpc ExecuteCode (ExecutionRequest) returns (ExecutionResponse);
+}
+
+message ExecutionRequest {
+  string code = 1;
+  string input = 2; // Standard input for the code
+  string language = 3;
+}
+
+message ExecutionResponse {
+  string output = 1;
+  string error = 2;
+  bool success = 3;
+}
