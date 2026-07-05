@@ -6,3 +6,18 @@ html, body {
   width: 100%;
   height: 100%;
 }
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+}
+
+.remote-cursor {
+  border-left: 2px solid #ef4444 !important;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+}
