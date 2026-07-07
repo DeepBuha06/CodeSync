@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { Client } from '@stomp/stompjs';
-import { Play, Users, Terminal, Share2, Check, FileText, Code2, PenTool, UserCog, User } from 'lucide-react';
+import { Play, Terminal, Share2, Check, FileText, Code2, PenTool, UserCog, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
 const USER_ID = "user-" + Math.floor(Math.random() * 10000);
 
 function App() {
-  const [roomId, setRoomId] = useState(() => {
+  const [roomId] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const room = params.get("room");
     if (room) return room;
@@ -27,11 +27,10 @@ function App() {
   const [stdin, setStdin] = useState("World");
   const [output, setOutput] = useState('');
   const [connected, setConnected] = useState(false);
-  const [editorInstance, setEditorInstance] = useState<any>(null);
   const stompClient = useRef<Client | null>(null);
-  const editorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const problemTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const editorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const problemTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const decorationsRef = useRef<any>(null);
   const roleRef = useRef(role);
   useEffect(() => {
@@ -186,16 +185,6 @@ function App() {
     }
   };
 
-  const handleJoinRoom = () => {
-    if (roomInput.trim() !== '') {
-      const newRoom = roomInput.trim();
-      setRoomId(newRoom);
-      window.history.pushState({}, '', `?room=${newRoom}`);
-      setCode(''); // Optional: clear editor when changing rooms
-      setOutput('');
-    }
-  };
-
   const handleShareRoom = () => {
     const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
     navigator.clipboard.writeText(url);
@@ -259,7 +248,6 @@ function App() {
   };
 
   const handleEditorDidMount = (editor: any) => {
-    setEditorInstance(editor);
     decorationsRef.current = editor.createDecorationsCollection();
 
     editor.onDidChangeCursorPosition((e: any) => {
