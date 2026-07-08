@@ -50,7 +50,7 @@ function App() {
     }
 
     // Fetch initial state first
-    fetch(`http://localhost:8080/api/room/${roomId}`)
+    fetch(`https://codesync-production-e9d9.up.railway.app/api/room/${roomId}`)
       .then(res => res.json())
       .then(data => {
         setCode(data.content);
@@ -60,7 +60,7 @@ function App() {
         
         // Then connect WebSocket for future updates
         const client = new Client({
-          brokerURL: 'ws://localhost:8080/ws-codesync',
+          brokerURL: 'wss://codesync-production-e9d9.up.railway.app/ws-codesync',
           onConnect: () => {
         setConnected(true);
         // Subscribe to the specific room's topic
